@@ -78,7 +78,7 @@ std::string set_error(int err)
         response.append("400 ");
         response.append(error_msg);
         response.append(" Content-Type: text/html Context-Lenght: 101\n\n");
-        response.append("<html><body>400 BAD REQUEST<img src=\"error/400.jpeg\" alt=\"\" width=\"600\" height=\"750\"> </body></html>");
+        response.append("<html><body>400 BAD REQUEST<img src=\"error/400.jpg\" alt=\"\" width=\"600\" height=\"750\"> </body></html>");
     }
     if (err == 403){
 // for now for missing extension in file
@@ -86,7 +86,7 @@ std::string set_error(int err)
         response.append("403 ");
         response.append(error_msg);
         response.append(" Content-Type: text/html Context-Lenght: 99\n\n");
-        response.append("<html><body>403 FORBIDDEN<img src=\"error/403.jpeg\" alt=\"\" width=\"600\" height=\"750\"> </body></html>");
+        response.append("<html><body>403 FORBIDDEN<img src=\"error/403.jpg\" alt=\"\" width=\"600\" height=\"750\"> </body></html>");
     }
     else if (err == 404){
 // for now, couldn't open file so does not exist
@@ -94,7 +94,7 @@ std::string set_error(int err)
         response.append("404 ");
         response.append(error_msg);
         response.append(" Content-Type: text/html Context-Lenght: 91\n\n");
-        response.append("<html><body>404 NOT FOUND<img src=\"error/404.jpeg\" alt=\"\" width=\"600\" height=\"750\"> </body></html>");
+        response.append("<html><body>404 NOT FOUND<img src=\"error/404.jpg\" alt=\"\" width=\"600\" height=\"750\"> </body></html>");
     }
     else if (err == 405){
 // is not GET POST or DELETE
@@ -102,7 +102,7 @@ std::string set_error(int err)
         response.append("405 ");
         response.append(error_msg);
         response.append(" Content-Type: text/html Context-Lenght: 108\n\n");
-        response.append("<html><body>405 METHOD NOT ALLOWED<img src=\"error/405.jpeg\" alt=\"\" width=\"600\" height=\"750\"> </body></html>");
+        response.append("<html><body>405 METHOD NOT ALLOWED<img src=\"error/405.jpg\" alt=\"\" width=\"600\" height=\"750\"> </body></html>");
     }
     else if (err == 411){
 // content lenght missing
@@ -110,7 +110,7 @@ std::string set_error(int err)
         response.append("411 ");
         response.append(error_msg);
         response.append(" Content-Type: text/html Context-Lenght: 106\n\n");
-        response.append("<html><body>411 LENGTH REQUIRED <img src=\"error/411.jpeg\" alt=\"\" width=\"600\" height=\"750\"> </body></html>");
+        response.append("<html><body>411 LENGTH REQUIRED <img src=\"error/411.jpg\" alt=\"\" width=\"600\" height=\"750\"> </body></html>");
     }
     else if (err == 413){
 // content lenght missing
@@ -118,7 +118,7 @@ std::string set_error(int err)
         response.append("413 ");
         response.append(error_msg);
         response.append(" Content-Type: text/html Context-Lenght: 108\n\n");
-        response.append("<html><body>413 PLAYLOAD TOO LARGE<img src=\"error/413.jpeg\" alt=\"\" width=\"600\" height=\"750\"> </body></html>");
+        response.append("<html><body>413 PLAYLOAD TOO LARGE<img src=\"error/413.jpg\" alt=\"\" width=\"600\" height=\"750\"> </body></html>");
     }
     else if (err == 500){
 // For now, couldn't delete file
@@ -126,7 +126,7 @@ std::string set_error(int err)
         response.append("500 ");
         response.append(error_msg);
         response.append(" Content-Type: text/html Context-Lenght: 111\n\n");
-        response.append("<html><body>500 INTERNAL SERVER ERROR<img src=\"error/500.jpeg\" alt=\"\" width=\"600\" height=\"750\"> </body></html>");
+        response.append("<html><body>500 INTERNAL SERVER ERROR<img src=\"error/500.jpg\" alt=\"\" width=\"600\" height=\"750\"> </body></html>");
     }
     else if (err == 505){
 // bad hhtp protocol version
@@ -134,7 +134,7 @@ std::string set_error(int err)
         response.append("505 ");
         response.append(error_msg);
         response.append(" Content-Type: text/html Context-Lenght: 116\n\n");
-        response.append("<html><body>505 HTTP VERSION NOT SUPPORTED<img src=\"error/505.jpeg\" alt=\"\" width=\"600\" height=\"750\"> </body></html>");
+        response.append("<html><body>505 HTTP VERSION NOT SUPPORTED<img src=\"error/505.jpg\" alt=\"\" width=\"600\" height=\"750\"> </body></html>");
     }
     return response;
 }
