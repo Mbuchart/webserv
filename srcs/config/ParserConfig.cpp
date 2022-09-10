@@ -17,9 +17,10 @@ ParserConfig::ParserConfig(const std::string& file_name)
 {
 	if (file_name.size() < 6 || file_name.substr(file_name.size() - 5) != ".conf")
 		throw std::runtime_error("Invalid file extension : " + file_name);
-	char *tmp = NULL;
-	strcpy(tmp, file_name.c_str());
+	char *tmp = new char[file_name.size()];
+	strncpy(tmp, file_name.c_str(), file_name.size());
 	m_ifs.open(tmp, std::ifstream::in);
+	delete tmp;
 	if (m_ifs.fail())
 		throw std::runtime_error("Unable to open the file : " + file_name);
 	parse();

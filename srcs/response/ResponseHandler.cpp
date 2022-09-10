@@ -125,15 +125,22 @@ std::string	ResponseHandler::make_response(std::string file, int error_code, std
 {
 	std::string	response;
 
+	std::stringstream tmp;
+	tmp << error_code;
+	std::string sec = tmp.str();
+	std::stringstream tmp1;
+	tmp << file.size();
+	std::string sfs = tmp.str();
+
 	//	Headers
    	response += request.protocol;
 	response += " ";
-	response += std::to_string(error_code);
+	response += sec;
 	response += " ";
 	response += error_responses[error_code];
 
 	response += "\nDate: " + get_date();
-	response += "\nContent-Length: " + std::to_string(file.size());
+	response += "\nContent-Length: " + sfs;
 	response += "\nContent-Type: " + get_content_type(path);
 	if (cookie != "")
 		response += "\nSet-Cookie: " + cookie;
@@ -160,15 +167,22 @@ std::string	ResponseHandler::http_error(int error_code)
 	if (file.size() > curr_loc.max_body_size)
 		file = "";
 
+	std::stringstream tmp;
+	tmp << error_code;
+	std::string sec = tmp.str();
+	std::stringstream tmp1;
+	tmp << file.size();
+	std::string sfs = tmp.str();
+
 	//	Headers
    	response += request.protocol;
 	response += " ";
-	response += std::to_string(error_code);
+	response += sec;
 	response += " ";
 	response += error_responses[error_code];
 
 	response += "\nDate: " + get_date();
-	response += "\nContent-Length: " + std::to_string(file.size());
+	response += "\nContent-Length: " + sfs;
 	response += "\nContent-Type: " + get_content_type(path);
 	response += "\r\n\r\n";
 
@@ -242,7 +256,14 @@ void	ResponseHandler::upload_file(std::string filename, std::string data)
 	std::string	path;
 
 	//data.pop_back();
-	if (request.location.back() != '/')
+	
+	int i = 0;
+	while(request.location[i] != '\0'){
+		i++;
+	}
+	i--;
+
+	if (request.location[i] != '/')
 		filename.insert(0, "/");
 	path = curr_loc.root.substr(1) + request.location + filename;
 	fd = open(path.c_str(), O_RDWR | O_CREAT | O_TRUNC, 0777);
@@ -305,6 +326,8 @@ std::string	ResponseHandler::exec_cgi(std::string file_path, std::string exec_pa
 
 		return (buf);
 	}
+
+	return (NULL);
 }
 
 int	ResponseHandler::check_method(void)
@@ -359,10 +382,13 @@ std::string	ResponseHandler::get_path(std::string path)
 	return (cwd + path);
 }
 
-std::string	ResponseHandler::retrieve_file(std::string path)
+std::string	ResponseHandler::retrieve_file(std::string& path)
 {
-    std::ostringstream	sstr;
-	std::ifstream		ifs(path);
+	char *tmp = NULL;
+	strcpy(tmp, path.c_str());
+    
+	std::ostringstream	sstr;
+	std::ifstream		ifs(tmp, std::ifstream::in);
 
     sstr << ifs.rdbuf();
     return (sstr.str());
@@ -465,8 +491,14 @@ std::string ResponseHandler::get_autoindex(std::string fullpath, std::string pat
 
 	if (dir == NULL)
 		throw std::runtime_error("Opendir failed : " + fullpath);
-	
-	if (path.back() != '/')
+		
+	int i = 0;
+	while(path[i] != '\0'){
+		i++;
+	}
+	i--;
+
+	if (path[i] != '/')
 		path += "/";
 
 	for (struct dirent *dir_entry = readdir(dir); dir_entry; dir_entry = readdir(dir))
