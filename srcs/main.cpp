@@ -34,7 +34,7 @@ int main(int argc, char **argv)
         std::cout << e.what() << std::endl;
 		return (1);
     }
-	std::cout << "Session closed" << std::endl;
+	std::cout << " Server closed" << std::endl;
 
 	return (0);
 }
