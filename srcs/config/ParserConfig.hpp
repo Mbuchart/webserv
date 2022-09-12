@@ -21,6 +21,7 @@
 #include <map>
 #include <set>
 #include <cstring>
+#include <csignal>
 #include "../utils/Utils.hpp"
 
 struct ConfigMembers
@@ -71,7 +72,7 @@ class ParserConfig
 public:
 	//	Public member functions
 	ParserConfig(const std::string& file_name);
-	~ParserConfig(void);
+	~ParserConfig( void );
 
 	std::vector<ServerMembers>&	getConfig(void);
 

@@ -28,7 +28,9 @@ ParserConfig::~ParserConfig(void)
 	try
 	{
 		if (m_ifs.is_open())
+		{
 			m_ifs.close();
+		}
 	}
 	catch (std::exception& e)
 	{

@@ -10,8 +10,8 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef SERVER_HPP
-# define SERVER_HPP
+#ifndef WEBSERV_HPP
+# define WEBSERV_HPP
 
 #include <iostream>
 #include <string>
@@ -46,6 +46,7 @@ class Webserv
 
 	public:
 		Server(ServerMembers &sm);
+		//~Server();
 
 		void	send_response(Client &client);
 		void	accept_client(fd_set &current_sockets);

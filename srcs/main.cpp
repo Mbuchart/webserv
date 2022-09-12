@@ -23,16 +23,18 @@ int main(int argc, char **argv)
 
     try 
     {
-        ParserConfig    			cf(argv[1]);
+		ParserConfig    			cf(argv[1]);
         std::vector<ServerMembers>	servers = cf.getConfig();
 
-		Webserv webserv(servers);		
+		Webserv webserv(servers);
         webserv.run();
-    }
+	}
     catch (std::exception& e)
     {
         std::cout << e.what() << std::endl;
 		return (1);
     }
+	std::cout << "Session closed" << std::endl;
+
 	return (0);
 }

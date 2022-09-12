@@ -10,8 +10,21 @@
 
 #include "Webserv.hpp"
 
+bool	quit;
+
+void	signalHandler( int signum )
+{
+	(void)signum;
+
+	quit = true;
+}
+
 Webserv::Webserv(std::vector<ServerMembers> &sm)
 {
+	quit = false;
+
+	std::signal(SIGINT, signalHandler);	
+
 	//	Create servers
 	for (size_t i = 0; i < sm.size(); ++i)
 		servers.push_back(sm[i]);
@@ -35,22 +48,29 @@ void Webserv::run()
 
 	while (1)
 	{
+		if (quit == true)
+			break ;
+
 		//	Copy because select is destructive.
 		ready_r_sock = current_sockets;
 		ready_w_sock = current_sockets;
 
-		if (select(FD_SETSIZE, &ready_r_sock, &ready_w_sock, NULL, NULL) < 0)
+		if (select(FD_SETSIZE, &ready_r_sock, &ready_w_sock, NULL, NULL) < 0 && quit == false)
 			throw std::runtime_error("Select failed.");
 
 		//	Check if client asks for connection
 		for (size_t i = 0; i < servers.size(); ++i)
 		{
+			if (quit == true)
+				break ;
 			if (FD_ISSET(servers[i].sock, &ready_r_sock))
 				servers[i].accept_client(current_sockets);
 
 			for (std::vector<Client>::iterator cli = servers[i].clients.begin(); 
 				cli != servers[i].clients.end(); ++cli)
 			{
+				if (quit == true)
+					break ;
 				if (cli->request.is_all_received() == false)
 				{
 					if (FD_ISSET(cli->sock, &ready_r_sock))
@@ -73,6 +93,7 @@ void Webserv::run()
 			}
 		}
 	}
+
 }
 
 
@@ -106,6 +127,15 @@ Webserv::Server::Server(ServerMembers &sm)
 	if (listen(sock, 4092) < 0)
 		throw std::runtime_error("Listen failed.");
 }
+
+// Webserv::Server::~Server()
+// {
+// 	for (size_t i = 0; i < clients.size(); i++)
+// 	{
+// 		close(clients[i].sock);
+// 		//shutdown(servers[i].sock, SHUT_RDWR);
+// 	}
+// }
 
 void	Webserv::Server::send_response(Client &client)
 {
