@@ -17,10 +17,7 @@ ParserConfig::ParserConfig(const std::string& file_name)
 {
 	if (file_name.size() < 6 || file_name.substr(file_name.size() - 5) != ".conf")
 		throw std::runtime_error("Invalid file extension : " + file_name);
-	char *tmp = new char[file_name.size()];
-	strncpy(tmp, file_name.c_str(), file_name.size());
-	m_ifs.open(tmp, std::ifstream::in);
-	delete tmp;
+	m_ifs.open(file_name.c_str(), std::ifstream::in);
 	if (m_ifs.fail())
 		throw std::runtime_error("Unable to open the file : " + file_name);
 	parse();
@@ -93,7 +90,7 @@ void	ParserConfig::parseServerCtx(std::string& line)
 	std::stringstream tmp;
 	tmp << m_curr_line;
 	std::string scl = tmp.str();
-	
+
 	int i = 0;
 	while(line[i] != '\0'){
 		i++;
@@ -103,7 +100,7 @@ void	ParserConfig::parseServerCtx(std::string& line)
 	if (line[i] != ';' && line.substr(0, 8) != "location")
 		throw std::runtime_error("Expected ';' at the end of the line : " + scl);
 	if (line[i] == ';')
-		line[i] = '\0';
+		line.erase(i);
 
 	std::string			word;
 	std::stringstream	ss(line);
@@ -137,7 +134,7 @@ void	ParserConfig::parseLocationCtx(std::string& line)
 	std::stringstream tmp;
 	tmp << m_curr_line;
 	std::string scl = tmp.str();
-	
+
 	int i = 0;
 	while(line[i] != '\0'){
 		i++;
@@ -147,10 +144,7 @@ void	ParserConfig::parseLocationCtx(std::string& line)
 	if (line[i] != ';')
 		throw std::runtime_error("Expected ';' at the end of the line : " + scl);
 	if (line[i] == ';')
-		line[i] = '\0';
-
-	// if (line.back() == ';')			// c++11
-	// line.pop_back();					// c++11
+		line.erase(i);
 
 	std::string			word;
 	std::stringstream	ss(line);
@@ -337,7 +331,7 @@ void	ParserConfig::addAutoIndex(std::stringstream& ss, ConfigMembers& cm)
 	else if (word == "off")
 		cm.autoindex = false;
 	else
-		throw std::runtime_error("Unexpected argument '" + word + "' on line : " + scl);
+		throw std::runtime_error("UUUUnexpected argument '" + word + "' on line : " + scl);
 	if (ss >> word)
 		throw std::runtime_error("Unexpected argument '" + word + "' on line : " + scl);
 }

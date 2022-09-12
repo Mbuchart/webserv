@@ -384,11 +384,8 @@ std::string	ResponseHandler::get_path(std::string path)
 
 std::string	ResponseHandler::retrieve_file(std::string& path)
 {
-	char *tmp = NULL;
-	strcpy(tmp, path.c_str());
-    
 	std::ostringstream	sstr;
-	std::ifstream		ifs(tmp, std::ifstream::in);
+	std::ifstream		ifs(path.c_str(), std::ifstream::in);
 
     sstr << ifs.rdbuf();
     return (sstr.str());
