@@ -390,6 +390,43 @@ void	Config::addAllowedMethods(std::stringstream& ss, LocationMembers& lm)
 		throw std::runtime_error("Expected methods argument on line : " + scl);
 }
 
+ConfigMembers::ConfigMembers(void)
+	: root(""), max_body_size(1000000000), autoindex(false)	
+{
+	std::string	path_to_error_files = "/files/error_files/";
+
+	this->error_pages[403] = path_to_error_files + "403.html";
+	this->error_pages[404] = path_to_error_files + "404.html";
+	this->error_pages[405] = path_to_error_files + "405.html";
+	this->error_pages[413] = path_to_error_files + "413.html";
+	this->error_pages[501] = path_to_error_files + "501.html";
+	this->error_pages[502] = path_to_error_files + "502.html";
+}
+
+ServerMembers::ServerMembers(const ServerMembers& cpy)
+{
+	*this = cpy;
+}
+
+LocationMembers::LocationMembers(const LocationMembers& cpy)
+{
+	*this = cpy;
+}
+
+LocationMembers::LocationMembers(const ServerMembers& cpy)
+{
+	this->root = cpy.root;
+	this->max_body_size = cpy.max_body_size;
+	this->error_pages = cpy.error_pages;
+	this->autoindex = cpy.autoindex;
+	this->index = cpy.index;
+	this->cgis = cpy.cgis;
+
+	this->allowedMethods.push_back("GET");
+	this->allowedMethods.push_back("POST");
+	this->allowedMethods.push_back("DELETE");
+}
+
 std::ostream&	operator<<(std::ostream &ostr, Config& pc)
 {
 	std::vector<ServerMembers>::iterator	ite = pc.getConfig().end();
@@ -439,41 +476,4 @@ std::ostream&	operator<<(std::ostream &ostr, Config& pc)
 		ostr << "\n";
 	}
 	return (ostr);
-}
-
-ConfigMembers::ConfigMembers(void)
-	: root(""), max_body_size(1000000000), autoindex(false)	
-{
-	std::string	path_to_error_files = "/files/error_files/";
-
-	this->error_pages[403] = path_to_error_files + "403.html";
-	this->error_pages[404] = path_to_error_files + "404.html";
-	this->error_pages[405] = path_to_error_files + "405.html";
-	this->error_pages[413] = path_to_error_files + "413.html";
-	this->error_pages[501] = path_to_error_files + "501.html";
-	this->error_pages[502] = path_to_error_files + "502.html";
-}
-
-ServerMembers::ServerMembers(const ServerMembers& cpy)
-{
-	*this = cpy;
-}
-
-LocationMembers::LocationMembers(const LocationMembers& cpy)
-{
-	*this = cpy;
-}
-
-LocationMembers::LocationMembers(const ServerMembers& cpy)
-{
-	this->root = cpy.root;
-	this->max_body_size = cpy.max_body_size;
-	this->error_pages = cpy.error_pages;
-	this->autoindex = cpy.autoindex;
-	this->index = cpy.index;
-	this->cgis = cpy.cgis;
-
-	this->allowedMethods.push_back("GET");
-	this->allowedMethods.push_back("POST");
-	this->allowedMethods.push_back("DELETE");
 }

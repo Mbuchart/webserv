@@ -1,11 +1,15 @@
 #include "../includes/Webserv.hpp"
 #include "../includes/Config.hpp"
 
+/***********************************************************************/
+/*                                MAIN                                 */
+/***********************************************************************/
+
 int main(int argc, char **argv)
 {
 	if (argc != 2)
 	{
-		std::cout << "Usage: " << argv[0] << " <config file>" << std::endl;
+		std::cout << "Usage: " << argv[0] << " config.conf" << std::endl;
 		return (1);
 	}
 
@@ -22,7 +26,7 @@ int main(int argc, char **argv)
         std::cout << e.what() << std::endl;
 		return (1);
     }
-	std::cout << " Server closed" << std::endl;
 
+	std::cout << " Server closed" << std::endl;
 	return (0);
 }

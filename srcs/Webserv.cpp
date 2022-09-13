@@ -1,7 +1,13 @@
 #include "../includes/Webserv.hpp"
 
+// quit via signal
 bool	quit;
 
+/***********************************************************************/
+/*                               SIGNAL                                */
+/***********************************************************************/
+
+// catching CTRL C to quit via destructors
 void	signalHandler( int signum )
 {
 	(void)signum;
@@ -9,6 +15,11 @@ void	signalHandler( int signum )
 	quit = true;
 }
 
+/***********************************************************************/
+/*                        CONSTR DESTR WEBSERV                         */
+/***********************************************************************/
+
+// constructor
 Webserv::Webserv(std::vector<ServerMembers> &sm)
 {
 	quit = false;
@@ -25,12 +36,18 @@ Webserv::Webserv(std::vector<ServerMembers> &sm)
 		FD_SET(servers[i].sock, &current_sockets);
 }
 
+// destructor
 Webserv::~Webserv(void)
 {
 	for (size_t i = 0; i < servers.size(); i++)
 		close(servers[i].sock);
 }
 
+/***********************************************************************/
+/*                             RUN SERVER                              */
+/***********************************************************************/
+
+// run
 void Webserv::run()
 {
 	fd_set						ready_r_sock;
@@ -86,9 +103,11 @@ void Webserv::run()
 
 }
 
+/***********************************************************************/
+/*                            CONSTR SERVER                            */
+/***********************************************************************/
 
-//	Server
-
+//	Server constructor (socket)
 Webserv::Server::Server(ServerMembers &sm)
 	: members(sm) 
 {
@@ -118,21 +137,34 @@ Webserv::Server::Server(ServerMembers &sm)
 		throw std::runtime_error("Listen failed.");
 }
 
-// Webserv::Server::~Server()
-// {
-// 	for (size_t i = 0; i < clients.size(); i++)
-// 	{
-// 		close(clients[i].sock);
-// 		//shutdown(servers[i].sock, SHUT_RDWR);
-// 	}
-// }
+/***********************************************************************/
+/*                          REQUEST RESPONSE                           */
+/***********************************************************************/
 
+// get request before sending response
+void	Webserv::Client::get_request(void)
+{
+	request.manage_request(sock);
+}
+
+// send response
 void	Webserv::Server::send_response(Client &client)
 {
 	RequestMembers rm = client.request.getRequest();
 	client.response.manage_response(client.sock, rm);
 }
 
+/***********************************************************************/
+/*                               CLIENT                                */
+/***********************************************************************/
+
+//	Client
+Webserv::Client::Client(ServerMembers &sm)
+	: response(sm)
+{
+}
+
+// accept client
 void	Webserv::Server::accept_client(fd_set &current_sockets)
 {
 	Client	new_client(members);
@@ -146,15 +178,4 @@ void	Webserv::Server::accept_client(fd_set &current_sockets)
 
 	clients.push_back(new_client);
 	FD_SET(new_client.sock, &current_sockets);
-}
-
-//	Client
-Webserv::Client::Client(ServerMembers &sm)
-	: response(sm)
-{
-}
-
-void	Webserv::Client::get_request(void)
-{
-	request.manage_request(sock);
 }
