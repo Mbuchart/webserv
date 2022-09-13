@@ -1,5 +1,10 @@
 #include "../includes/Response.hpp"
 
+/***********************************************************************/
+/*                             CONSTR DESTR                            */
+/***********************************************************************/
+
+//constructor
 Response::Response(ServerMembers s)
 	: server(s)
 {
@@ -14,10 +19,16 @@ Response::Response(ServerMembers s)
 	error_responses[502] = "Bad Gateway";
 }
 
+//destructor
 Response::~Response()
 {
 }
 
+/***********************************************************************/
+/*                              DISPATCH                               */
+/***********************************************************************/
+
+// dispatch
 void Response::manage_response(int socket, RequestMembers r)
 {
 	request = r;
@@ -27,13 +38,7 @@ void Response::manage_response(int socket, RequestMembers r)
 	write_response();
 }
 
-bool	Response::is_sent(void)
-{
-	if (http_response == "")
-		return (true);
-	return (false);
-}
-
+//dispatch again
 std::string	Response::get_response(void)
 {
 	int			error_code;
@@ -61,13 +66,14 @@ std::string	Response::get_response(void)
 	if (error_code != 200)
 		return (http_error(error_code));
 
-	//	Manage requests
+	//	Manage DELETE
 	if (request.method == "DELETE")
 	{
 		if (remove(path.c_str()))
 			return (http_error(404));
 	}
 
+	//Manage GET
 	else if (request.method == "GET")
 	{
 		if (is_file(path))
@@ -75,7 +81,8 @@ std::string	Response::get_response(void)
 		else
 			file = get_autoindex(path, request.location);
 	}
-	//	Manage POST for uploads and all
+
+	//	Manage POST
 	else if (request.method == "POST")
 		file = manage_post_request(path);
 
@@ -96,19 +103,7 @@ std::string	Response::get_response(void)
 	return (make_response(file, error_code, path));
 }
 
-void	Response::get_current_loc(void)
-{
-	//	Find correct location in server
-	for (size_t i = 0; i < server.locations.size(); ++i)
-	{
-		if (request.location.find(server.locations[i].uri) == 0)
-		{
-			if (curr_loc.uri < server.locations[i].uri)
-				curr_loc = server.locations[i];
-		}
-	}
-}
-
+// make response
 std::string	Response::make_response(std::string file, int error_code, std::string path)
 {
 	std::string	response;
@@ -131,8 +126,6 @@ std::string	Response::make_response(std::string file, int error_code, std::strin
 	response += "\nDate: " + get_date();
 	response += "\nContent-Length: " + sfs;
 	response += "\nContent-Type: " + get_content_type(path);
-	if (cookie != "")
-		response += "\nSet-Cookie: " + cookie;
 	response += "\r\n\r\n";
 
 	//	Body
@@ -140,6 +133,29 @@ std::string	Response::make_response(std::string file, int error_code, std::strin
 	response += "\r\n";
 	return (response);
 }
+
+// write (send) response
+void	Response::write_response(void)
+{
+	int			ret;
+	std::string	&buffer = http_response;
+
+	ret = write(curr_sock, buffer.c_str(), buffer.size());
+	if (ret == -1)
+		throw std::runtime_error("Write failed.");
+
+	// Client disconnected
+	if (ret == 0)
+	{
+		//close_connection(socket);
+		return ;
+	}
+	buffer = buffer.substr(ret);
+}
+
+/***********************************************************************/
+/*                               ERRORS                                */
+/***********************************************************************/
 
 std::string	Response::http_error(int error_code)
 {
@@ -181,87 +197,21 @@ std::string	Response::http_error(int error_code)
 	return (response);
 }
 
-void	Response::write_response(void)
-{
-	int			ret;
-	std::string	&buffer = http_response;
-
-	ret = write(curr_sock, buffer.c_str(), buffer.size());
-	if (ret == -1)
-		throw std::runtime_error("Write failed.");
-
-	// Client disconnected
-	if (ret == 0)
-	{
-		//close_connection(socket);
-		return ;
-	}
-	buffer = buffer.substr(ret);
-}
+/***********************************************************************/
+/*                                POST                                 */
+/***********************************************************************/
 
 std::string	Response::manage_post_request(std::string &path)
 {
-	//	Uploads
-	if (request.post_file.filename != "")
-	{
-		upload_file(request.post_file.filename, request.post_file.data);
-		path = ".html";
-		return ("<h1>File has been uploaded successfully</h1>");
-	}
-	
-	//	Add potential cookies
-	if (request.location == "/login.php" || request.location == "/other.php")
-	{
-		for (size_t i = 0; i < request.small_datas.size(); ++i)
-		{
-			std::string data = request.small_datas[i];
-			if (data.substr(0, 9) == "username=")
-				cookie = data + "; Expires=Wed, 21 Oct 2025 07:28:00 GMT; Path=/";
-			else if (data == "logout=logout")
-			{
-				cookie = "username=xx; Expires=Wed, 21 Oct 2020 07:28:00 GMT; Path=/";
-				for (std::vector<std::string>::iterator it = request.cookies.begin();
-						it != request.cookies.end(); ++it)
-				{
-					if (it->substr(0, 9) == "username=")
-					{
-						request.cookies.erase(it);
-						break ;
-					}
-				}
-			}
-		}
-	}
-
 	if (is_file(path))
 		return (retrieve_file(path));
 	else
 		return ("");
 }
 
-void	Response::upload_file(std::string filename, std::string data)
-{
-	int			fd;
-	std::string	path;
-
-	//data.pop_back();
-	
-	int i = 0;
-	while(request.location[i] != '\0'){
-		i++;
-	}
-	i--;
-
-	if (request.location[i] != '/')
-		filename.insert(0, "/");
-	path = curr_loc.root.substr(1) + request.location + filename;
-	fd = open(path.c_str(), O_RDWR | O_CREAT | O_TRUNC, 0777);
-	if (fd == -1)
-		throw std::runtime_error("Open failed.");
-	if (write(fd, data.c_str(), data.size()) == -1)
-		throw std::runtime_error("Write failed.");
-	close(fd);
-}
+/***********************************************************************/
+/*                                CGI                                  */
+/***********************************************************************/
 
 std::string	Response::exec_cgi(std::string file_path, std::string exec_path)
 {
@@ -279,11 +229,6 @@ std::string	Response::exec_cgi(std::string file_path, std::string exec_path)
 
 	for (size_t i = 0; i < request.small_datas.size(); ++i)
 		env.push_back(request.small_datas[i].c_str());
-
-	for (size_t i = 0; i < request.cookies.size(); ++i)
-		env.push_back(request.cookies[i].c_str());
-	env.push_back(0);
-
 
 	//	Pipe and fork
 	if (pipe(fd) == -1)
@@ -319,6 +264,52 @@ std::string	Response::exec_cgi(std::string file_path, std::string exec_path)
 	return (NULL);
 }
 
+/***********************************************************************/
+/*                             AUTOINDEX                               */
+/***********************************************************************/
+
+std::string Response::get_autoindex(std::string fullpath, std::string path)
+{
+	DIR *dir = opendir(fullpath.c_str());
+
+	std::string Autoindex_Page =
+	"<!DOCTYPE html>\n\
+    <html>\n\
+    <head>\n\
+    <title>" + path + "</title>\n\
+    </head>\n\
+    <body>\n\
+    <h1>INDEX</h1>\n\
+    <p>\n";
+
+	if (dir == NULL)
+		throw std::runtime_error("Opendir failed : " + fullpath);
+		
+	int i = 0;
+	while(path[i] != '\0'){
+		i++;
+	}
+	i--;
+
+	if (path[i] != '/')
+		path += "/";
+
+	for (struct dirent *dir_entry = readdir(dir); dir_entry; dir_entry = readdir(dir))
+		Autoindex_Page += dir_to_html(std::string(dir_entry->d_name), path);
+
+	Autoindex_Page += "\
+    </p>\n\
+    </body>\n\
+    </html>\n";
+	closedir(dir);
+	return Autoindex_Page;
+}
+
+/***********************************************************************/
+/*                               METHODS                               */
+/***********************************************************************/
+
+// check methods
 int	Response::check_method(void)
 {
 	if (!is_method_implemented())
@@ -328,6 +319,7 @@ int	Response::check_method(void)
 	return (200);
 }
 
+// not supported methods
 bool	Response::is_method_allowed()
 {
 	for (size_t i = 0; i < curr_loc.allowedMethods.size(); ++i)
@@ -338,13 +330,96 @@ bool	Response::is_method_allowed()
 	return (false);
 }
 
+// have to manage GET POST and DELETE
 bool	Response::is_method_implemented(void)
 {
 	if (request.method == "GET" || request.method == "POST" || request.method == "DELETE")
 		return (true);
 	return (false);
 }
-	
+
+/***********************************************************************/
+/*                                UTILS                                */
+/***********************************************************************/
+
+// get current loc
+void	Response::get_current_loc(void)
+{
+	//	Find correct location in server
+	for (size_t i = 0; i < server.locations.size(); ++i)
+	{
+		if (request.location.find(server.locations[i].uri) == 0)
+		{
+			if (curr_loc.uri < server.locations[i].uri)
+				curr_loc = server.locations[i];
+		}
+	}
+}
+
+// is sent
+bool	Response::is_sent(void)
+{
+	if (http_response == "")
+		return (true);
+	return (false);
+}
+
+// get date
+std::string Response::get_date(void)
+{
+	time_t		rawtime;
+	struct tm	*timeinfo;
+	char		buff[100];
+
+	time(&rawtime);
+ 	timeinfo = localtime(&rawtime);
+	strftime(buff, 100, "%a, %d %b %Y %H:%M:%S GMT", timeinfo);
+	return (std::string(buff));
+}
+
+// is file
+bool	Response::is_file(std::string path)
+{
+	struct stat	s;
+
+	if (access(path.c_str(), F_OK) < 0)
+		return (false);
+	if (stat(path.c_str(), &s) < 0)
+		throw std::runtime_error("Stat failed.");
+	return (S_ISREG(s.st_mode));
+}
+
+// get path
+std::string	Response::get_path(std::string path)
+{
+	char		cwd[256];
+
+	if (getcwd(cwd, 256) == NULL)
+		throw std::runtime_error("Getcwd failed.");
+	return (cwd + path);
+}
+
+// get files
+std::string	Response::retrieve_file(std::string path)
+{
+	std::ostringstream	sstr;
+	std::ifstream		ifs(path.c_str(), std::ifstream::in);
+
+	sstr << ifs.rdbuf();
+	return (sstr.str());
+}
+
+// dir path to html path
+std::string Response::dir_to_html(std::string dir_entry, std::string path)
+{
+	std::stringstream ss;
+	path = path.substr(path.find(curr_loc.root) + curr_loc.root.size());
+	if (dir_entry != ".." && dir_entry != ".")
+		ss << "\t\t<p><a href=\"http://" + request.host + ":" << request.port << path + dir_entry + "\">" + dir_entry + "/" + "</a></p>\n";
+	return ss.str();
+}
+
+// check paths
 int	Response::check_path_access(std::string path)
 {
 	//	Check if we can access to path
@@ -362,47 +437,7 @@ int	Response::check_path_access(std::string path)
 	return (200);
 }
 
-std::string	Response::get_path(std::string path)
-{
-	char		cwd[256];
-
-	if (getcwd(cwd, 256) == NULL)
-		throw std::runtime_error("Getcwd failed.");
-	return (cwd + path);
-}
-
-std::string	Response::retrieve_file(std::string path)
-{
-	std::ostringstream	sstr;
-	std::ifstream		ifs(path.c_str(), std::ifstream::in);
-
-	sstr << ifs.rdbuf();
-	return (sstr.str());
-}
-
-bool	Response::is_file(std::string path)
-{
-	struct stat	s;
-
-	if (access(path.c_str(), F_OK) < 0)
-		return (false);
-	if (stat(path.c_str(), &s) < 0)
-		throw std::runtime_error("Stat failed.");
-	return (S_ISREG(s.st_mode));
-}
-
-std::string Response::get_date(void)
-{
-	time_t		rawtime;
-	struct tm	*timeinfo;
-	char		buff[100];
-
-	time(&rawtime);
- 	timeinfo = localtime(&rawtime);
-	strftime(buff, 100, "%a, %d %b %Y %H:%M:%S GMT", timeinfo);
-	return (std::string(buff));
-}
-
+// content_type
 std::string	Response::get_content_type(std::string file)
 {
 	std::string	extension;
@@ -450,50 +485,4 @@ std::string	Response::get_content_type(std::string file)
 
 	else
 		return ("text/html");
-}
-
-std::string Response::dir_to_html(std::string dir_entry, std::string path)
-{
-	std::stringstream ss;
-	path = path.substr(path.find(curr_loc.root) + curr_loc.root.size());
-	if (dir_entry != ".." && dir_entry != ".")
-		ss << "\t\t<p><a href=\"http://" + request.host + ":" << request.port << path + dir_entry + "\">" + dir_entry + "/" + "</a></p>\n";
-	return ss.str();
-}
-
-std::string Response::get_autoindex(std::string fullpath, std::string path)
-{
-	DIR *dir = opendir(fullpath.c_str());
-
-	std::string Autoindex_Page =
-	"<!DOCTYPE html>\n\
-    <html>\n\
-    <head>\n\
-    <title>" + path + "</title>\n\
-    </head>\n\
-    <body>\n\
-    <h1>INDEX</h1>\n\
-    <p>\n";
-
-	if (dir == NULL)
-		throw std::runtime_error("Opendir failed : " + fullpath);
-		
-	int i = 0;
-	while(path[i] != '\0'){
-		i++;
-	}
-	i--;
-
-	if (path[i] != '/')
-		path += "/";
-
-	for (struct dirent *dir_entry = readdir(dir); dir_entry; dir_entry = readdir(dir))
-		Autoindex_Page += dir_to_html(std::string(dir_entry->d_name), path);
-
-	Autoindex_Page += "\
-    </p>\n\
-    </body>\n\
-    </html>\n";
-	closedir(dir);
-	return Autoindex_Page;
 }

@@ -84,8 +84,6 @@ void	Request::parseHeader(std::string& line)
 		parseContentLength(ss);
 	else if (word == "Content-Type:")
 		parseContentType(ss);
-	else if (word == "Cookie:")
-		parseCookie(ss);
 	else if (word == "")
 		ctx = BODY;
 }
@@ -184,25 +182,6 @@ void	Request::parseContentType(std::stringstream& ss)
 	}
 }
 
-void	Request::parseCookie(std::stringstream& ss)
-{
-	std::string	word;
-
-	while (ss >> word)
-	{
-	
-		int i = 0;
-		while(word[i] != '\0'){
-			i++;
-		}
-		i--;
-
-		if (word[i] == ';')
-			word.erase(i);
-		m_rm.cookies.push_back(word);
-	}
-}
-
 void	Request::parsePost(std::string& line)
 {
 	size_t		next = 0;
@@ -260,9 +239,6 @@ std::ostream&	operator<<(std::ostream &ostr, RequestMembers& rm)
 	ostr << "Host : " << rm.host << ", port : " << rm.port << std::endl;
 
 	ostr << "Content_length : " << rm.content_length << std::endl;
-	ostr << "Cookies :\n";
-	for (size_t i = 0; i < rm.cookies.size(); ++i)
-		ostr << rm.cookies[i] + " ";
 	ostr << "\n";
 	ostr << "File : " << rm.post_file.filename << "\n";
 	ostr << "\n";

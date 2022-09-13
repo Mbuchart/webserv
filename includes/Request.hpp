@@ -42,7 +42,6 @@ struct RequestMembers
 	int									port;
 
 	size_t								content_length;
-	std::vector<std::string>			cookies;
 
 	//	Request body
 	post_file							post_file;
@@ -79,7 +78,6 @@ private:
 	void		parseHost(std::stringstream& ss);
 	void		parseContentLength(std::stringstream& ss);
 	void		parseContentType(std::stringstream& ss);
-	void		parseCookie(std::stringstream& ss);
 
 	//	Body parsing
 	void		parseContentDisposition(std::stringstream& ss);
