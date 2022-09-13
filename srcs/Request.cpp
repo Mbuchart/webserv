@@ -1,27 +1,15 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   ParserRequest.cpp                                  :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: fejjed <fejjed@student.42.fr>              +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/05/10 12:52:11 by tamighi           #+#    #+#             */
-/*   Updated: 2022/07/26 10:46:06 by tamighi          ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
+#include "../includes/Request.hpp"
 
-#include "ParserRequest.hpp"
-
-ParserRequest::ParserRequest(void)
+Request::Request(void)
 	: ctx(HEADER), has_read(false), content_received(0)
 {
 }
 
-ParserRequest::~ParserRequest(void)
+Request::~Request(void)
 {
 }
 
-void	ParserRequest::manage_request(int fd)
+void	Request::manage_request(int fd)
 {
 	std::string	request;
 
@@ -31,17 +19,17 @@ void	ParserRequest::manage_request(int fd)
 	parse(request);
 }
 
-bool	ParserRequest::is_all_received(void)
+bool	Request::is_all_received(void)
 {
 	return (has_read && content_received == m_rm.content_length);
 }
 
-const RequestMembers&	ParserRequest::getRequest(void)
+const RequestMembers&	Request::getRequest(void)
 {
 	return (m_rm);
 }
 
-std::string	ParserRequest::read_client(int fd)
+std::string	Request::read_client(int fd)
 {
 	int			ret;
 	char		buffer[DATA_BUFFER + 1];
@@ -60,7 +48,7 @@ std::string	ParserRequest::read_client(int fd)
 	return (std::string(buffer, ret));
 }
 
-void	ParserRequest::parse(std::string &buffer)
+void	Request::parse(std::string &buffer)
 {
 	std::string			line;
 	std::stringstream	ss(buffer);
@@ -81,7 +69,7 @@ void	ParserRequest::parse(std::string &buffer)
 	}
 }
 
-void	ParserRequest::parseHeader(std::string& line)
+void	Request::parseHeader(std::string& line)
 {
 	std::stringstream	ss(line);
 	std::string			word;
@@ -102,7 +90,7 @@ void	ParserRequest::parseHeader(std::string& line)
 		ctx = BODY;
 }
 
-void	ParserRequest::parseBody(std::string& line)
+void	Request::parseBody(std::string& line)
 {
 	if (boundary != "" && line.find(boundary) != std::string::npos)
 		ctx = BOUNDARY;
@@ -110,7 +98,7 @@ void	ParserRequest::parseBody(std::string& line)
 		parsePost(line);
 }
 
-void	ParserRequest::parseBoundary(std::string& line)
+void	Request::parseBoundary(std::string& line)
 {
 	std::stringstream	ss(line);
 	std::string			word;
@@ -122,7 +110,7 @@ void	ParserRequest::parseBoundary(std::string& line)
 		ctx = CONTENT;
 }
 
-void	ParserRequest::parseFile(void)
+void	Request::parseFile(void)
 {
 	if (m_rm.post_file.filename == "" || is_all_received() == false)
 		return ;
@@ -138,14 +126,14 @@ void	ParserRequest::parseFile(void)
 	m_rm.post_file.data = file;
 }
 
-void	ParserRequest::parseMethod(std::stringstream& ss, std::string& word)
+void	Request::parseMethod(std::stringstream& ss, std::string& word)
 {
 	m_rm.method = word;
 	ss >> m_rm.location;
 	ss >> m_rm.protocol;
 }
 
-void	ParserRequest::parseHost(std::stringstream& ss)
+void	Request::parseHost(std::stringstream& ss)
 {
 	std::string	word;
 	size_t		double_dot;
@@ -170,7 +158,7 @@ void	ParserRequest::parseHost(std::stringstream& ss)
 	}
 }
 
-void	ParserRequest::parseContentLength(std::stringstream& ss)
+void	Request::parseContentLength(std::stringstream& ss)
 {
 	std::string	word;
 
@@ -183,7 +171,7 @@ void	ParserRequest::parseContentLength(std::stringstream& ss)
 	m_rm.content_length = i;
 }
 
-void	ParserRequest::parseContentType(std::stringstream& ss)
+void	Request::parseContentType(std::stringstream& ss)
 {
 	std::string	word;
 
@@ -196,7 +184,7 @@ void	ParserRequest::parseContentType(std::stringstream& ss)
 	}
 }
 
-void	ParserRequest::parseCookie(std::stringstream& ss)
+void	Request::parseCookie(std::stringstream& ss)
 {
 	std::string	word;
 
@@ -215,7 +203,7 @@ void	ParserRequest::parseCookie(std::stringstream& ss)
 	}
 }
 
-void	ParserRequest::parsePost(std::string& line)
+void	Request::parsePost(std::string& line)
 {
 	size_t		next = 0;
 
@@ -227,7 +215,7 @@ void	ParserRequest::parsePost(std::string& line)
 	}
 }
 
-void	ParserRequest::parseContentDisposition(std::stringstream& ss)
+void	Request::parseContentDisposition(std::stringstream& ss)
 {
 	struct RequestMembers::post_file	data;
 	std::string							word;

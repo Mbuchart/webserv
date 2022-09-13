@@ -1,17 +1,5 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   ParserConfig.hpp                                   :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: fejjed <fejjed@student.42.fr>              +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/05/03 14:28:49 by tamighi           #+#    #+#             */
-/*   Updated: 2022/07/22 16:28:05 by tamighi          ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
-#ifndef PARSERCONFIG_HPP
-# define PARSERCONFIG_HPP
+#ifndef CONFIG_HPP
+# define CONFIG_HPP
 
 #include <iostream>
 #include <vector>
@@ -22,7 +10,7 @@
 #include <set>
 #include <cstring>
 #include <csignal>
-#include "../utils/Utils.hpp"
+#include "Utils.hpp"
 
 struct ConfigMembers
 {
@@ -66,13 +54,13 @@ struct LocationMembers : public ConfigMembers
 	std::vector<std::string>	allowedMethods;
 };
 
-class ParserConfig
+class Config
 {
 
 public:
 	//	Public member functions
-	ParserConfig(const std::string& file_name);
-	~ParserConfig( void );
+	Config(const std::string& file_name);
+	~Config( void );
 
 	std::vector<ServerMembers>&	getConfig(void);
 
@@ -120,6 +108,6 @@ private:
 	std::vector<ServerMembers>	m_cms;
 };
 
-std::ostream&	operator<<(std::ostream &ostr, ParserConfig& pc);
+std::ostream&	operator<<(std::ostream &ostr, Config& pc);
 
 #endif

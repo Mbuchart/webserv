@@ -1,18 +1,6 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   ParserConfig.cpp                                   :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: fejjed <fejjed@student.42.fr>              +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/05/03 14:28:52 by tamighi           #+#    #+#             */
-/*   Updated: 2022/07/22 17:12:56 by tamighi          ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
+#include "../includes/Config.hpp"
 
-#include "ParserConfig.hpp"
-
-ParserConfig::ParserConfig(const std::string& file_name)
+Config::Config(const std::string& file_name)
 	: m_ctx(MAIN), m_curr_line(0)
 {
 	if (file_name.size() < 6 || file_name.substr(file_name.size() - 5) != ".conf")
@@ -23,7 +11,7 @@ ParserConfig::ParserConfig(const std::string& file_name)
 	parse();
 }
 
-ParserConfig::~ParserConfig(void)
+Config::~Config(void)
 {
 	try
 	{
@@ -38,12 +26,12 @@ ParserConfig::~ParserConfig(void)
 	}
 }
 
-std::vector<ServerMembers>&	ParserConfig::getConfig(void)
+std::vector<ServerMembers>&	Config::getConfig(void)
 {
 	return (m_cms);
 }
 
-void	ParserConfig::parse(void)
+void	Config::parse(void)
 {
 	std::string	line;
 
@@ -73,7 +61,7 @@ void	ParserConfig::parse(void)
 		throw std::runtime_error("File is empty");
 }
 
-void	ParserConfig::parseMainCtx(std::string& line)
+void	Config::parseMainCtx(std::string& line)
 {
 	std::stringstream tmp;
 	tmp << m_curr_line;
@@ -87,7 +75,7 @@ void	ParserConfig::parseMainCtx(std::string& line)
 	m_ctx = SERVER;
 }
 
-void	ParserConfig::parseServerCtx(std::string& line)
+void	Config::parseServerCtx(std::string& line)
 {
 	std::stringstream tmp;
 	tmp << m_curr_line;
@@ -131,7 +119,7 @@ void	ParserConfig::parseServerCtx(std::string& line)
 		throw std::runtime_error("Unexpected argument '" + word + "' on line : " + scl);
 }
 
-void	ParserConfig::parseLocationCtx(std::string& line)
+void	Config::parseLocationCtx(std::string& line)
 {
 	std::stringstream tmp;
 	tmp << m_curr_line;
@@ -171,7 +159,7 @@ void	ParserConfig::parseLocationCtx(std::string& line)
 		throw std::runtime_error("Unexpected argument '" + word + "' on line : " + scl);
 }
 
-void	ParserConfig::endScope(void)
+void	Config::endScope(void)
 {
 	std::stringstream tmp;
 	tmp << m_curr_line;
@@ -185,7 +173,7 @@ void	ParserConfig::endScope(void)
 		throw std::runtime_error("Unexpected  '}' on line : " + scl);
 }
 
-void	ParserConfig::addListen(std::stringstream& ss, ServerMembers& cm)
+void	Config::addListen(std::stringstream& ss, ServerMembers& cm)
 {
 	std::stringstream tmp;
 	tmp << m_curr_line;
@@ -218,7 +206,7 @@ void	ParserConfig::addListen(std::stringstream& ss, ServerMembers& cm)
 		throw std::runtime_error("Unexpected argument '" + word + "' on line : " + scl);
 }
 
-void	ParserConfig::addServerName(std::stringstream& ss, ServerMembers& sm)
+void	Config::addServerName(std::stringstream& ss, ServerMembers& sm)
 {
 	std::stringstream tmp;
 	tmp << m_curr_line;
@@ -232,7 +220,7 @@ void	ParserConfig::addServerName(std::stringstream& ss, ServerMembers& sm)
 		throw std::runtime_error("Expected server names argument on line : " + scl);
 }
 
-void	ParserConfig::addRoot(std::stringstream& ss, ConfigMembers& cm)
+void	Config::addRoot(std::stringstream& ss, ConfigMembers& cm)
 {
 	std::stringstream tmp;
 	tmp << m_curr_line;
@@ -247,7 +235,7 @@ void	ParserConfig::addRoot(std::stringstream& ss, ConfigMembers& cm)
 		throw std::runtime_error("Unexpected argument '" + word + "' on line : " + scl);
 }
 
-void	ParserConfig::addIndex(std::stringstream& ss, ConfigMembers& cm)
+void	Config::addIndex(std::stringstream& ss, ConfigMembers& cm)
 {
 	std::stringstream tmp;
 	tmp << m_curr_line;
@@ -262,7 +250,7 @@ void	ParserConfig::addIndex(std::stringstream& ss, ConfigMembers& cm)
 		throw std::runtime_error("Unexpected argument '" + word + "' on line : " + scl);
 }
 
-void	ParserConfig::addMaxBodySize(std::stringstream& ss, ConfigMembers& cm)
+void	Config::addMaxBodySize(std::stringstream& ss, ConfigMembers& cm)
 {
 	std::stringstream tmp;
 	tmp << m_curr_line;
@@ -288,7 +276,7 @@ void	ParserConfig::addMaxBodySize(std::stringstream& ss, ConfigMembers& cm)
 		throw std::runtime_error("Unexpected argument '" + word + "' on line : " + scl);
 }
 
-void	ParserConfig::addErrorPages(std::stringstream& ss, ConfigMembers& cm)
+void	Config::addErrorPages(std::stringstream& ss, ConfigMembers& cm)
 {
 	std::stringstream tmp;
 	tmp << m_curr_line;
@@ -318,7 +306,7 @@ void	ParserConfig::addErrorPages(std::stringstream& ss, ConfigMembers& cm)
 		throw std::runtime_error("Unexpected argument '" + word + "' on line : " + scl);
 }
 
-void	ParserConfig::addAutoIndex(std::stringstream& ss, ConfigMembers& cm)
+void	Config::addAutoIndex(std::stringstream& ss, ConfigMembers& cm)
 {
 	std::stringstream tmp;
 	tmp << m_curr_line;
@@ -338,7 +326,7 @@ void	ParserConfig::addAutoIndex(std::stringstream& ss, ConfigMembers& cm)
 		throw std::runtime_error("Unexpected argument '" + word + "' on line : " + scl);
 }
 
-void	ParserConfig::addCgis(std::stringstream& ss, ConfigMembers& cm)
+void	Config::addCgis(std::stringstream& ss, ConfigMembers& cm)
 {
 	std::stringstream tmp;
 	tmp << m_curr_line;
@@ -354,7 +342,7 @@ void	ParserConfig::addCgis(std::stringstream& ss, ConfigMembers& cm)
 		throw std::runtime_error("Unexpected argument '" + ext + "' on line : " + scl);
 }
 
-void	ParserConfig::addLocation(std::stringstream& ss, ServerMembers& sm)
+void	Config::addLocation(std::stringstream& ss, ServerMembers& sm)
 {
 	std::stringstream tmp;
 	tmp << m_curr_line;
@@ -378,7 +366,7 @@ void	ParserConfig::addLocation(std::stringstream& ss, ServerMembers& sm)
 		throw std::runtime_error("Unexpected argument '" + word + "' on line : " + scl);
 }
 
-void	ParserConfig::addAllowedMethods(std::stringstream& ss, LocationMembers& lm)
+void	Config::addAllowedMethods(std::stringstream& ss, LocationMembers& lm)
 {
 	std::stringstream tmp;
 	tmp << m_curr_line;
@@ -402,7 +390,7 @@ void	ParserConfig::addAllowedMethods(std::stringstream& ss, LocationMembers& lm)
 		throw std::runtime_error("Expected methods argument on line : " + scl);
 }
 
-std::ostream&	operator<<(std::ostream &ostr, ParserConfig& pc)
+std::ostream&	operator<<(std::ostream &ostr, Config& pc)
 {
 	std::vector<ServerMembers>::iterator	ite = pc.getConfig().end();
 	std::vector<ServerMembers>::iterator	it = pc.getConfig().begin();

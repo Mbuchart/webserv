@@ -1,19 +1,8 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   ResponseHandler.hpp                                :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: tamighi <marvin@42.fr>                     +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/07/07 10:42:05 by tamighi           #+#    #+#             */
-/*   Updated: 2022/07/26 09:48:08 by tamighi          ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
- #ifndef RESPONSEHANDLER_HPP
-# define RESPONSEHANDLER_HPP
+#ifndef RESPONSE_HPP
+# define RESPONSE_HPP
 
-#include "../config/ParserConfig.hpp"
-#include "../request/ParserRequest.hpp"
+#include "Config.hpp"
+#include "Request.hpp"
 #include <cstdlib>
 #include <iostream>
 #include <unistd.h>
@@ -22,14 +11,14 @@
 #include <dirent.h>
 #include <time.h>
 
-class ResponseHandler
+class Response
 {
 
 public:
 			//	Public functions
 	
-	ResponseHandler(ServerMembers s);
-	~ResponseHandler();
+	Response(ServerMembers s);
+	~Response();
 
 	void		manage_response(int socket, RequestMembers r);
 	bool		is_sent(void);

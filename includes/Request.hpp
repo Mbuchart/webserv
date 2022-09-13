@@ -1,17 +1,5 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   ParserRequest.hpp                                  :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: fejjed <fejjed@student.42.fr>              +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/05/10 12:52:17 by tamighi           #+#    #+#             */
-/*   Updated: 2022/07/26 09:50:18 by tamighi          ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
-#ifndef PARSERREQUEST_HPP
-# define PARSERREQUEST_HPP
+#ifndef REQUEST_HPP
+# define REQUEST_HPP
 
 #include <iostream>
 #include <cstring>
@@ -26,7 +14,7 @@
 #include <sys/stat.h>
 #include <dirent.h>
 #include <time.h>
-#include "../utils/Utils.hpp"
+#include "Utils.hpp"
 
 #define DATA_BUFFER 800000
 
@@ -61,15 +49,15 @@ struct RequestMembers
 	std::vector<std::string>			small_datas;
 };
 
-class ParserRequest
+class Request
 {
 
 public:
 	//	Public member functions
 
-	ParserRequest(void);
+	Request(void);
 
-	~ParserRequest(void);
+	~Request(void);
 
 	void					manage_request(int fd);
 	bool					is_all_received(void);

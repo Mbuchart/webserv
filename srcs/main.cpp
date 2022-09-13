@@ -1,17 +1,5 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   main.cpp                                           :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: fejjed <fejjed@student.42.fr>              +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/04/30 10:57:05 by tamighi           #+#    #+#             */
-/*   Updated: 2022/07/24 11:28:06 by tamighi          ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
-#include "webserv/Webserv.hpp"
-#include "config/ParserConfig.hpp"
+#include "../includes/Webserv.hpp"
+#include "../includes/Config.hpp"
 
 int main(int argc, char **argv)
 {
@@ -23,7 +11,7 @@ int main(int argc, char **argv)
 
     try 
     {
-		ParserConfig    			cf(argv[1]);
+		Config    			cf(argv[1]);
         std::vector<ServerMembers>	servers = cf.getConfig();
 
 		Webserv webserv(servers);

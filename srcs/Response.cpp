@@ -1,18 +1,6 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   ResponseHandler.cpp                                :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: tamighi <marvin@42.fr>                     +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/07/07 10:42:46 by tamighi           #+#    #+#             */
-/*   Updated: 2022/07/26 10:46:06 by tamighi          ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
+#include "../includes/Response.hpp"
 
-#include "ResponseHandler.hpp"
-
-ResponseHandler::ResponseHandler(ServerMembers s)
+Response::Response(ServerMembers s)
 	: server(s)
 {
 	error_responses[200] = "OK";
@@ -26,11 +14,11 @@ ResponseHandler::ResponseHandler(ServerMembers s)
 	error_responses[502] = "Bad Gateway";
 }
 
-ResponseHandler::~ResponseHandler()
+Response::~Response()
 {
 }
 
-void ResponseHandler::manage_response(int socket, RequestMembers r)
+void Response::manage_response(int socket, RequestMembers r)
 {
 	request = r;
 	curr_sock = socket;
@@ -39,14 +27,14 @@ void ResponseHandler::manage_response(int socket, RequestMembers r)
 	write_response();
 }
 
-bool	ResponseHandler::is_sent(void)
+bool	Response::is_sent(void)
 {
 	if (http_response == "")
 		return (true);
 	return (false);
 }
 
-std::string	ResponseHandler::get_response(void)
+std::string	Response::get_response(void)
 {
 	int			error_code;
 	std::string	path;
@@ -108,7 +96,7 @@ std::string	ResponseHandler::get_response(void)
 	return (make_response(file, error_code, path));
 }
 
-void	ResponseHandler::get_current_loc(void)
+void	Response::get_current_loc(void)
 {
 	//	Find correct location in server
 	for (size_t i = 0; i < server.locations.size(); ++i)
@@ -121,7 +109,7 @@ void	ResponseHandler::get_current_loc(void)
 	}
 }
 
-std::string	ResponseHandler::make_response(std::string file, int error_code, std::string path)
+std::string	Response::make_response(std::string file, int error_code, std::string path)
 {
 	std::string	response;
 
@@ -153,7 +141,7 @@ std::string	ResponseHandler::make_response(std::string file, int error_code, std
 	return (response);
 }
 
-std::string	ResponseHandler::http_error(int error_code)
+std::string	Response::http_error(int error_code)
 {
 	std::string response;
 	std::string	path;
@@ -193,7 +181,7 @@ std::string	ResponseHandler::http_error(int error_code)
 	return (response);
 }
 
-void	ResponseHandler::write_response(void)
+void	Response::write_response(void)
 {
 	int			ret;
 	std::string	&buffer = http_response;
@@ -211,7 +199,7 @@ void	ResponseHandler::write_response(void)
 	buffer = buffer.substr(ret);
 }
 
-std::string	ResponseHandler::manage_post_request(std::string &path)
+std::string	Response::manage_post_request(std::string &path)
 {
 	//	Uploads
 	if (request.post_file.filename != "")
@@ -251,7 +239,7 @@ std::string	ResponseHandler::manage_post_request(std::string &path)
 		return ("");
 }
 
-void	ResponseHandler::upload_file(std::string filename, std::string data)
+void	Response::upload_file(std::string filename, std::string data)
 {
 	int			fd;
 	std::string	path;
@@ -275,7 +263,7 @@ void	ResponseHandler::upload_file(std::string filename, std::string data)
 	close(fd);
 }
 
-std::string	ResponseHandler::exec_cgi(std::string file_path, std::string exec_path)
+std::string	Response::exec_cgi(std::string file_path, std::string exec_path)
 {
 	std::vector<const char *>	env;
 	std::vector<const char *>	exec;
@@ -331,7 +319,7 @@ std::string	ResponseHandler::exec_cgi(std::string file_path, std::string exec_pa
 	return (NULL);
 }
 
-int	ResponseHandler::check_method(void)
+int	Response::check_method(void)
 {
 	if (!is_method_implemented())
 		return (501);
@@ -340,7 +328,7 @@ int	ResponseHandler::check_method(void)
 	return (200);
 }
 
-bool	ResponseHandler::is_method_allowed()
+bool	Response::is_method_allowed()
 {
 	for (size_t i = 0; i < curr_loc.allowedMethods.size(); ++i)
 	{
@@ -350,14 +338,14 @@ bool	ResponseHandler::is_method_allowed()
 	return (false);
 }
 
-bool	ResponseHandler::is_method_implemented(void)
+bool	Response::is_method_implemented(void)
 {
 	if (request.method == "GET" || request.method == "POST" || request.method == "DELETE")
 		return (true);
 	return (false);
 }
 	
-int	ResponseHandler::check_path_access(std::string path)
+int	Response::check_path_access(std::string path)
 {
 	//	Check if we can access to path
 	if (access(path.c_str(), F_OK) < 0)
@@ -374,7 +362,7 @@ int	ResponseHandler::check_path_access(std::string path)
 	return (200);
 }
 
-std::string	ResponseHandler::get_path(std::string path)
+std::string	Response::get_path(std::string path)
 {
 	char		cwd[256];
 
@@ -383,7 +371,7 @@ std::string	ResponseHandler::get_path(std::string path)
 	return (cwd + path);
 }
 
-std::string	ResponseHandler::retrieve_file(std::string path)
+std::string	Response::retrieve_file(std::string path)
 {
 	std::ostringstream	sstr;
 	std::ifstream		ifs(path.c_str(), std::ifstream::in);
@@ -392,7 +380,7 @@ std::string	ResponseHandler::retrieve_file(std::string path)
 	return (sstr.str());
 }
 
-bool	ResponseHandler::is_file(std::string path)
+bool	Response::is_file(std::string path)
 {
 	struct stat	s;
 
@@ -403,7 +391,7 @@ bool	ResponseHandler::is_file(std::string path)
 	return (S_ISREG(s.st_mode));
 }
 
-std::string ResponseHandler::get_date(void)
+std::string Response::get_date(void)
 {
 	time_t		rawtime;
 	struct tm	*timeinfo;
@@ -415,7 +403,7 @@ std::string ResponseHandler::get_date(void)
 	return (std::string(buff));
 }
 
-std::string	ResponseHandler::get_content_type(std::string file)
+std::string	Response::get_content_type(std::string file)
 {
 	std::string	extension;
 	size_t		idx;
@@ -464,7 +452,7 @@ std::string	ResponseHandler::get_content_type(std::string file)
 		return ("text/html");
 }
 
-std::string ResponseHandler::dir_to_html(std::string dir_entry, std::string path)
+std::string Response::dir_to_html(std::string dir_entry, std::string path)
 {
 	std::stringstream ss;
 	path = path.substr(path.find(curr_loc.root) + curr_loc.root.size());
@@ -473,7 +461,7 @@ std::string ResponseHandler::dir_to_html(std::string dir_entry, std::string path
 	return ss.str();
 }
 
-std::string ResponseHandler::get_autoindex(std::string fullpath, std::string path)
+std::string Response::get_autoindex(std::string fullpath, std::string path)
 {
 	DIR *dir = opendir(fullpath.c_str());
 
