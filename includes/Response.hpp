@@ -33,7 +33,6 @@ private:
 
 	void		get_current_loc(void);
 	std::string	manage_post_request(std::string &path);
-	void		upload_file(std::string filename, std::string data);
 
 	std::string	exec_cgi(std::string file_path, std::string exec_path);
 
