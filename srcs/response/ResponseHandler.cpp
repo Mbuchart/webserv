@@ -129,8 +129,9 @@ std::string	ResponseHandler::make_response(std::string file, int error_code, std
 	tmp << error_code;
 	std::string sec = tmp.str();
 	std::stringstream tmp1;
-	tmp << file.size();
-	std::string sfs = tmp.str();
+	int i = file.size();
+	tmp << i;
+	std::string sfs = tmp1.str();
 
 	//	Headers
    	response += request.protocol;
@@ -382,13 +383,13 @@ std::string	ResponseHandler::get_path(std::string path)
 	return (cwd + path);
 }
 
-std::string	ResponseHandler::retrieve_file(std::string& path)
+std::string	ResponseHandler::retrieve_file(std::string path)
 {
 	std::ostringstream	sstr;
 	std::ifstream		ifs(path.c_str(), std::ifstream::in);
 
-    sstr << ifs.rdbuf();
-    return (sstr.str());
+	sstr << ifs.rdbuf();
+	return (sstr.str());
 }
 
 bool	ResponseHandler::is_file(std::string path)

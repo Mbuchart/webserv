@@ -210,7 +210,7 @@ void	ParserRequest::parseCookie(std::stringstream& ss)
 		i--;
 
 		if (word[i] == ';')
-			word[i] = '\0';
+			word.erase(i);
 		m_rm.cookies.push_back(word);
 	}
 }
@@ -243,7 +243,7 @@ void	ParserRequest::parseContentDisposition(std::stringstream& ss)
 	i--;
 
 	if (word[i] == ';')
-		word[i] = '\0';
+		word.erase(i);
 	equal = word.find("=");
 	data.envname = word.substr(equal + 1);
 	if (ss >> word)
@@ -257,7 +257,7 @@ void	ParserRequest::parseContentDisposition(std::stringstream& ss)
 		}
 		i--;
 
-		data.filename[i] = '\0';
+		data.filename.erase(i);
 	}
 	m_rm.post_file = data;
 }

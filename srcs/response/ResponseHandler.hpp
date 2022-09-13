@@ -58,7 +58,7 @@ private:
 
 	//	Utils
 	std::string	get_path(std::string path);
-	std::string	retrieve_file(std::string& path);
+	std::string	retrieve_file(std::string path);
 	bool		is_file(std::string path);
 
 	std::string	get_date(void);
