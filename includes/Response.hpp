@@ -61,6 +61,7 @@ private:
 
 	ServerMembers				server;
 	std::string					http_response;
+	std::string					cookie;
 	std::map<int, std::string>	error_responses;
 
 	RequestMembers				request;

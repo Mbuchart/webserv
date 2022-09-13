@@ -126,6 +126,8 @@ std::string	Response::make_response(std::string file, int error_code, std::strin
 	response += "\nDate: " + get_date();
 	response += "\nContent-Length: " + sfs;
 	response += "\nContent-Type: " + get_content_type(path);
+	if (cookie != "")
+		response += "\nSet-Cookie: " + cookie;
 	response += "\r\n\r\n";
 
 	//	Body
@@ -203,6 +205,30 @@ std::string	Response::http_error(int error_code)
 
 std::string	Response::manage_post_request(std::string &path)
 {
+	//	Add potential cookies
+	if (request.location == "/login.php" || request.location == "/other.php")
+	{
+		for (size_t i = 0; i < request.small_datas.size(); ++i)
+		{
+			std::string data = request.small_datas[i];
+			if (data.substr(0, 9) == "username=")
+				cookie = data + "; Expires=Wed, 21 Oct 2025 07:28:00 GMT; Path=/";
+			else if (data == "logout=logout")
+			{
+				cookie = "username=xx; Expires=Wed, 21 Oct 2020 07:28:00 GMT; Path=/";
+				for (std::vector<std::string>::iterator it = request.cookies.begin();
+						it != request.cookies.end(); ++it)
+				{
+					if (it->substr(0, 9) == "username=")
+					{
+						request.cookies.erase(it);
+						break ;
+					}
+				}
+			}
+		}
+	}
+
 	if (is_file(path))
 		return (retrieve_file(path));
 	else
@@ -229,6 +255,11 @@ std::string	Response::exec_cgi(std::string file_path, std::string exec_path)
 
 	for (size_t i = 0; i < request.small_datas.size(); ++i)
 		env.push_back(request.small_datas[i].c_str());
+
+	for (size_t i = 0; i < request.cookies.size(); ++i)
+		env.push_back(request.cookies[i].c_str());
+	env.push_back(0);
+
 
 	//	Pipe and fork
 	if (pipe(fd) == -1)
@@ -260,8 +291,6 @@ std::string	Response::exec_cgi(std::string file_path, std::string exec_path)
 
 		return (buf);
 	}
-
-	return (NULL);
 }
 
 /***********************************************************************/

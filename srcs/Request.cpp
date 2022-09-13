@@ -1,5 +1,9 @@
 #include "../includes/Request.hpp"
 
+/***********************************************************************/
+/*                            CONSTR DESTR                             */
+/***********************************************************************/
+
 Request::Request(void)
 	: ctx(HEADER), has_read(false), content_received(0)
 {
@@ -8,6 +12,34 @@ Request::Request(void)
 Request::~Request(void)
 {
 }
+
+std::ostream&	operator<<(std::ostream &ostr, RequestMembers& rm)
+{
+	ostr << "PARSING : \n";
+	ostr << "Method : " << rm.method << std::endl;
+	ostr << "Location : " << rm.location << std::endl;
+	ostr << "Protocol : " << rm.protocol << std::endl;
+
+	ostr << "Host : " << rm.host << ", port : " << rm.port << std::endl;
+
+	ostr << "Content_length : " << rm.content_length << std::endl;
+	ostr << "Cookies :\n";
+	for (size_t i = 0; i < rm.cookies.size(); ++i)
+		ostr << rm.cookies[i] + " ";
+	ostr << "\n";
+	ostr << "File : " << rm.post_file.filename << "\n";
+	ostr << "\n";
+	ostr << "Envir :\n";
+	for (size_t i = 0; i < rm.small_datas.size(); ++i)
+		ostr << rm.small_datas[i] + " ";
+	ostr << "\n";
+	ostr << "\n";
+	return (ostr);;
+}
+
+/***********************************************************************/
+/*                               REQUEST                               */
+/***********************************************************************/
 
 void	Request::manage_request(int fd)
 {
@@ -19,15 +51,9 @@ void	Request::manage_request(int fd)
 	parse(request);
 }
 
-bool	Request::is_all_received(void)
-{
-	return (has_read && content_received == m_rm.content_length);
-}
-
-const RequestMembers&	Request::getRequest(void)
-{
-	return (m_rm);
-}
+/***********************************************************************/
+/*                                READ                                 */
+/***********************************************************************/
 
 std::string	Request::read_client(int fd)
 {
@@ -48,6 +74,11 @@ std::string	Request::read_client(int fd)
 	return (std::string(buffer, ret));
 }
 
+/***********************************************************************/
+/*                                Parse                                */
+/***********************************************************************/
+
+// parse all
 void	Request::parse(std::string &buffer)
 {
 	std::string			line;
@@ -69,6 +100,11 @@ void	Request::parse(std::string &buffer)
 	}
 }
 
+/***********************************************************************/
+/*                               HEADER                                */
+/***********************************************************************/
+
+// Header + dispatch
 void	Request::parseHeader(std::string& line)
 {
 	std::stringstream	ss(line);
@@ -84,44 +120,10 @@ void	Request::parseHeader(std::string& line)
 		parseContentLength(ss);
 	else if (word == "Content-Type:")
 		parseContentType(ss);
+	else if (word == "Cookie:")
+		parseCookie(ss);
 	else if (word == "")
 		ctx = BODY;
-}
-
-void	Request::parseBody(std::string& line)
-{
-	if (boundary != "" && line.find(boundary) != std::string::npos)
-		ctx = BOUNDARY;
-	else
-		parsePost(line);
-}
-
-void	Request::parseBoundary(std::string& line)
-{
-	std::stringstream	ss(line);
-	std::string			word;
-
-	ss >> word;
-	if (word == "Content-Disposition:")
-		parseContentDisposition(ss);
-	else if (word == "")
-		ctx = CONTENT;
-}
-
-void	Request::parseFile(void)
-{
-	if (m_rm.post_file.filename == "" || is_all_received() == false)
-		return ;
-
-	std::string	file;
-	size_t		idx;
-
-	idx = whole_buff.find("\r\n\r\n");
-	idx = whole_buff.find("\r\n\r\n", idx + 1);
-	file = whole_buff.substr(idx + 4);
-	idx = file.find("------" + boundary);
-	file = file.substr(0, idx - 2);
-	m_rm.post_file.data = file;
 }
 
 void	Request::parseMethod(std::stringstream& ss, std::string& word)
@@ -182,6 +184,36 @@ void	Request::parseContentType(std::stringstream& ss)
 	}
 }
 
+void	Request::parseCookie(std::stringstream& ss)
+{
+	std::string	word;
+
+	while (ss >> word)
+	{
+		int i = 0;
+		while(word[i] != '\0'){
+			i++;
+		}
+		i--;
+
+		if (word[i] == ';')
+			word.erase(i);
+		m_rm.cookies.push_back(word);
+	}
+}
+
+/***********************************************************************/
+/*                                BODY                                 */
+/***********************************************************************/
+
+void	Request::parseBody(std::string& line)
+{
+	if (boundary != "" && line.find(boundary) != std::string::npos)
+		ctx = BOUNDARY;
+	else
+		parsePost(line);
+}
+
 void	Request::parsePost(std::string& line)
 {
 	size_t		next = 0;
@@ -192,6 +224,22 @@ void	Request::parsePost(std::string& line)
 		m_rm.small_datas.push_back(line.substr(0, next));
 		line = line.substr(next + 1, line.size());
 	}
+}
+
+/***********************************************************************/
+/*                              BOUNDARY                               */
+/***********************************************************************/
+
+void	Request::parseBoundary(std::string& line)
+{
+	std::stringstream	ss(line);
+	std::string			word;
+
+	ss >> word;
+	if (word == "Content-Disposition:")
+		parseContentDisposition(ss);
+	else if (word == "")
+		ctx = CONTENT;
 }
 
 void	Request::parseContentDisposition(std::stringstream& ss)
@@ -229,23 +277,36 @@ void	Request::parseContentDisposition(std::stringstream& ss)
 	m_rm.post_file = data;
 }
 
-std::ostream&	operator<<(std::ostream &ostr, RequestMembers& rm)
+/***********************************************************************/
+/*                                FILE                                 */
+/***********************************************************************/
+
+void	Request::parseFile(void)
 {
-	ostr << "PARSING : \n";
-	ostr << "Method : " << rm.method << std::endl;
-	ostr << "Location : " << rm.location << std::endl;
-	ostr << "Protocol : " << rm.protocol << std::endl;
+	if (m_rm.post_file.filename == "" || is_all_received() == false)
+		return ;
 
-	ostr << "Host : " << rm.host << ", port : " << rm.port << std::endl;
+	std::string	file;
+	size_t		idx;
 
-	ostr << "Content_length : " << rm.content_length << std::endl;
-	ostr << "\n";
-	ostr << "File : " << rm.post_file.filename << "\n";
-	ostr << "\n";
-	ostr << "Envir :\n";
-	for (size_t i = 0; i < rm.small_datas.size(); ++i)
-		ostr << rm.small_datas[i] + " ";
-	ostr << "\n";
-	ostr << "\n";
-	return (ostr);;
+	idx = whole_buff.find("\r\n\r\n");
+	idx = whole_buff.find("\r\n\r\n", idx + 1);
+	file = whole_buff.substr(idx + 4);
+	idx = file.find("------" + boundary);
+	file = file.substr(0, idx - 2);
+	m_rm.post_file.data = file;
+}
+
+/***********************************************************************/
+/*                               UTILS                                 */
+/***********************************************************************/
+
+bool	Request::is_all_received(void)
+{
+	return (has_read && content_received == m_rm.content_length);
+}
+
+const RequestMembers&	Request::getRequest(void)
+{
+	return (m_rm);
 }
