@@ -34,11 +34,14 @@ void Response::manage_response(int socket, RequestMembers r)
 	request = r;
 	curr_sock = socket;
 
+	// parse and get response
 	http_response = get_response();
+
+	// write/send response
 	write_response();
 }
 
-//dispatch again
+// dispatch 1
 std::string	Response::get_response(void)
 {
 	int			error_code;
@@ -51,29 +54,29 @@ std::string	Response::get_response(void)
 
 	get_current_loc();
 
-	//	Check if correct method
+	// Check if correct method
 	error_code = check_method();
 	if (error_code != 200)
 		return (http_error(error_code));
 
-	//	Add index
+	// Add index
 	if (request.method == "GET" && curr_loc.uri == request.location && curr_loc.autoindex == false)
 		request.location += curr_loc.index;
 
-	//	Check if correct path
+	// Check if correct path
 	path = get_path(curr_loc.root + request.location);
 	error_code = check_path_access(path);
 	if (error_code != 200)
 		return (http_error(error_code));
 
-	//	Manage DELETE
+	// Manage DELETE
 	if (request.method == "DELETE")
 	{
 		if (remove(path.c_str()))
 			return (http_error(404));
 	}
 
-	//Manage GET
+	// Manage GET
 	else if (request.method == "GET")
 	{
 		if (is_file(path))
@@ -82,11 +85,11 @@ std::string	Response::get_response(void)
 			file = get_autoindex(path, request.location);
 	}
 
-	//	Manage POST
+	// Manage POST
 	else if (request.method == "POST")
 		file = manage_post_request(path);
 
-	//	Exec cgis
+	// Exec cgis
 	for (std::map<std::string, std::string>::iterator it = curr_loc.cgis.begin();
 			it != curr_loc.cgis.end(); ++it)
 	{
@@ -95,11 +98,11 @@ std::string	Response::get_response(void)
 			file = exec_cgi(path, it->second);
 	}
 
-	//	Check body size
+	// Check body size
 	if (file.size() > curr_loc.max_body_size)
 		return (http_error(413));
 
-	//	Write response
+	// Write response
 	return (make_response(file, error_code, path));
 }
 
@@ -111,9 +114,9 @@ std::string	Response::make_response(std::string file, int error_code, std::strin
 	std::stringstream tmp;
 	tmp << error_code;
 	std::string sec = tmp.str();
+
 	std::stringstream tmp1;
-	int i = file.size();
-	tmp << i;
+	tmp1 << file.size();
 	std::string sfs = tmp1.str();
 
 	//	Headers
@@ -178,8 +181,8 @@ std::string	Response::http_error(int error_code)
 	tmp << error_code;
 	std::string sec = tmp.str();
 	std::stringstream tmp1;
-	tmp << file.size();
-	std::string sfs = tmp.str();
+	tmp1 << file.size();
+	std::string sfs = tmp1.str();
 
 	//	Headers
    	response += request.protocol;
