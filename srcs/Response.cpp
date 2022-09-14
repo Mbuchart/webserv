@@ -35,6 +35,7 @@ void Response::manage_response(int socket, RequestMembers r)
 	curr_sock = socket;
 
 	// parse and get response
+	// and stock response in http_response
 	http_response = get_response();
 
 	// write/send response
@@ -52,10 +53,13 @@ std::string	Response::get_response(void)
 	if (http_response != "")
 		return (http_response);
 
+	// get location from .conf
 	get_current_loc();
 
 	// Check if correct method
 	error_code = check_method();
+
+	// only code 200 is ok
 	if (error_code != 200)
 		return (http_error(error_code));
 
@@ -65,6 +69,7 @@ std::string	Response::get_response(void)
 
 	// Check if correct path
 	path = get_path(curr_loc.root + request.location);
+	// checks if the path is real
 	error_code = check_path_access(path);
 	if (error_code != 200)
 		return (http_error(error_code));
@@ -72,6 +77,7 @@ std::string	Response::get_response(void)
 	// Manage DELETE
 	if (request.method == "DELETE")
 	{
+		// removes file , return 0 if successful
 		if (remove(path.c_str()))
 			return (http_error(404));
 	}
@@ -79,9 +85,10 @@ std::string	Response::get_response(void)
 	// Manage GET
 	else if (request.method == "GET")
 	{
+		// is it a file? yes so open and get its content
 		if (is_file(path))
 			file = retrieve_file(path);
-		else
+		else // no so autoindex
 			file = get_autoindex(path, request.location);
 	}
 
@@ -94,6 +101,7 @@ std::string	Response::get_response(void)
 			it != curr_loc.cgis.end(); ++it)
 	{
 		size_t	idx = path.rfind('.');
+		// take off the path until . to get py for python or php for php
 		if (idx != std::string::npos && path.substr(idx) == it->first && is_file(path))
 			file = exec_cgi(path, it->second);
 	}
@@ -162,6 +170,7 @@ void	Response::write_response(void)
 /*                               ERRORS                                */
 /***********************************************************************/
 
+// get error page
 std::string	Response::http_error(int error_code)
 {
 	std::string response;
@@ -214,11 +223,13 @@ std::string	Response::manage_post_request(std::string &path)
 		for (size_t i = 0; i < request.small_datas.size(); ++i)
 		{
 			std::string data = request.small_datas[i];
+
+			// if login with username -> add to cookie
 			if (data.substr(0, 9) == "username=")
-				cookie = data + "; Expires=Wed, 21 Oct 2025 07:28:00 GMT; Path=/";
-			else if (data == "logout=logout")
+				cookie = data + "; Expires=Wed, 27 Jun 2025 07:28:00 GMT; Path=/";
+			else if (data == "logout=logout") // if logout erase cookie username
 			{
-				cookie = "username=xx; Expires=Wed, 21 Oct 2020 07:28:00 GMT; Path=/";
+				cookie = "username=xx; Expires=Wed, 27 Jun 2022 07:28:00 GMT; Path=/";
 				for (std::vector<std::string>::iterator it = request.cookies.begin();
 						it != request.cookies.end(); ++it)
 				{
@@ -232,6 +243,7 @@ std::string	Response::manage_post_request(std::string &path)
 		}
 	}
 
+	// if post file open and get content
 	if (is_file(path))
 		return (retrieve_file(path));
 	else
@@ -252,7 +264,9 @@ std::string	Response::exec_cgi(std::string file_path, std::string exec_path)
 	char 						buf[65535];
 
 	//	Create execution command and environnment
+	// exec_path in .conf for example usr/bin/python
 	exec.push_back(exec_path.c_str());
+	// file_path the path to the file for example .py
 	exec.push_back(file_path.c_str());
 	exec.push_back(0);
 
@@ -300,10 +314,12 @@ std::string	Response::exec_cgi(std::string file_path, std::string exec_path)
 /*                             AUTOINDEX                               */
 /***********************************************************************/
 
+// autoindex (or when url finish with a '/')
 std::string Response::get_autoindex(std::string fullpath, std::string path)
 {
 	DIR *dir = opendir(fullpath.c_str());
 
+	// create a listing of dir from the path
 	std::string Autoindex_Page =
 	"<!DOCTYPE html>\n\
     <html>\n\
@@ -326,6 +342,7 @@ std::string Response::get_autoindex(std::string fullpath, std::string path)
 	if (path[i] != '/')
 		path += "/";
 
+	// add every dir from full_path
 	for (struct dirent *dir_entry = readdir(dir); dir_entry; dir_entry = readdir(dir))
 		Autoindex_Page += dir_to_html(std::string(dir_entry->d_name), path);
 
@@ -405,6 +422,7 @@ std::string Response::get_date(void)
 
 	time(&rawtime);
  	timeinfo = localtime(&rawtime);
+	// function to get the time however you want
 	strftime(buff, 100, "%a, %d %b %Y %H:%M:%S GMT", timeinfo);
 	return (std::string(buff));
 }
@@ -414,6 +432,7 @@ bool	Response::is_file(std::string path)
 {
 	struct stat	s;
 
+	// can we access it literally
 	if (access(path.c_str(), F_OK) < 0)
 		return (false);
 	if (stat(path.c_str(), &s) < 0)
@@ -435,9 +454,12 @@ std::string	Response::get_path(std::string path)
 std::string	Response::retrieve_file(std::string path)
 {
 	std::ostringstream	sstr;
+	// open the file with its path
 	std::ifstream		ifs(path.c_str(), std::ifstream::in);
 
 	sstr << ifs.rdbuf();
+
+	// return its content
 	return (sstr.str());
 }
 
