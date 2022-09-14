@@ -41,13 +41,17 @@ std::ostream&	operator<<(std::ostream &ostr, RequestMembers& rm)
 /*                               REQUEST                               */
 /***********************************************************************/
 
+// only need the cient fd to read the request
 void	Request::manage_request(int fd)
 {
 	std::string	request;
 
+	// read what client sent
 	request = read_client(fd);
 	whole_buff += request;
 	has_read = true;
+
+	// go to parsing
 	parse(request);
 }
 
@@ -60,8 +64,13 @@ std::string	Request::read_client(int fd)
 	int			ret;
 	char		buffer[DATA_BUFFER + 1];
 
+	// reinit buffer to 0
 	memset(buffer, 0, DATA_BUFFER);
+
+	// read what client sent on client fd
 	ret = read(fd, buffer, DATA_BUFFER);
+
+	// usually buffer has the request stored
 
 	if (ret == -1)
 		throw std::runtime_error("Read failed.");
@@ -71,6 +80,7 @@ std::string	Request::read_client(int fd)
 
 	content_received += ret;
 
+	// return the first ret characters from buffer
 	return (std::string(buffer, ret));
 }
 
@@ -84,17 +94,20 @@ void	Request::parse(std::string &buffer)
 	std::string			line;
 	std::stringstream	ss(buffer);
 
+	// extract characters from ss and stores it in line until the first '\n'
 	while (std::getline(ss, line))
 	{
+		// ctx is where we are in the parsing
+		// ctx is init at HEADER in the constructor
 		if (ctx == HEADER)
-			parseHeader(line);
+			parseHeader(line);		// header
 		else if (ctx == BODY)
-			parseBody(line);
+			parseBody(line);		// body
 		else if (ctx == BOUNDARY)
-			parseBoundary(line);
+			parseBoundary(line);	// boundary
 		else if (ctx == CONTENT)
 		{
-			parseFile();
+			parseFile();			// file
 			break ;
 		}
 	}
@@ -113,26 +126,29 @@ void	Request::parseHeader(std::string& line)
 	content_received -= line.size() + 1;
 	ss >> word;
 	if (Utils::isValidMethod(word))
-		parseMethod(ss, word);
+		parseMethod(ss, word);			// Method
 	else if (word == "Host:")
-		parseHost(ss);
+		parseHost(ss);					// Host
 	else if (word == "Content-Length:")
-		parseContentLength(ss);
+		parseContentLength(ss);			// Content Length
 	else if (word == "Content-Type:")
-		parseContentType(ss);
+		parseContentType(ss);			// Content Type
 	else if (word == "Cookie:")
-		parseCookie(ss);
+		parseCookie(ss);				// Cookies
 	else if (word == "")
 		ctx = BODY;
 }
 
+// get Method
 void	Request::parseMethod(std::stringstream& ss, std::string& word)
 {
+	// GET POST or DELETE
 	m_rm.method = word;
 	ss >> m_rm.location;
 	ss >> m_rm.protocol;
 }
 
+// get Host
 void	Request::parseHost(std::stringstream& ss)
 {
 	std::string	word;
@@ -140,24 +156,34 @@ void	Request::parseHost(std::stringstream& ss)
 
 	ss >> word;
 
+	// localhost:8080
 	double_dot = word.find(":");
+
+	// if ":" is not at the end of the string
 	if (double_dot != std::string::npos)
 	{
+
+		// save "localhost" in host
 		m_rm.host = word.substr(0, double_dot);
 
 		int i;
 
 		std::istringstream ( word.substr(double_dot + 1, word.size()).c_str() ) >> i;
 
+		// save the port (8080) in port
 		m_rm.port = i;
+
 	}
 	else
 	{
+		// save whatever host
 		m_rm.host = word;
+		// put the default port 80 in port
 		m_rm.port = 80;
 	}
 }
 
+// get Content Length
 void	Request::parseContentLength(std::stringstream& ss)
 {
 	std::string	word;
@@ -166,39 +192,51 @@ void	Request::parseContentLength(std::stringstream& ss)
 
 	int i;
 
+	// Content length
 	std::istringstream ( word ) >> i;
 
 	m_rm.content_length = i;
 }
 
+// get Content Type
 void	Request::parseContentType(std::stringstream& ss)
 {
 	std::string	word;
 
 	ss >> word;
+
 	if (word == "multipart/form-data;")
 	{
+
 		ss >> word;
 		size_t idx = word.find("WebKitFormBoundary");
 		boundary = word.substr(idx);
+
 	}
 }
 
+// get Cookies
 void	Request::parseCookie(std::stringstream& ss)
 {
 	std::string	word;
 
 	while (ss >> word)
 	{
+
 		int i = 0;
-		while(word[i] != '\0'){
+		while(word[i] != '\0')
+		{
 			i++;
 		}
 		i--;
 
 		if (word[i] == ';')
 			word.erase(i);
+
+		// simply push_back cookie in vector cookies
+		// ex: username=mbubuch
 		m_rm.cookies.push_back(word);
+
 	}
 }
 
@@ -206,6 +244,7 @@ void	Request::parseCookie(std::stringstream& ss)
 /*                                BODY                                 */
 /***********************************************************************/
 
+// Body + dispatch
 void	Request::parseBody(std::string& line)
 {
 	if (boundary != "" && line.find(boundary) != std::string::npos)
@@ -214,12 +253,15 @@ void	Request::parseBody(std::string& line)
 		parsePost(line);
 }
 
+// get Post data if POST request
 void	Request::parsePost(std::string& line)
 {
 	size_t		next = 0;
 
 	while (next != std::string::npos)
 	{
+		// store every data separated by '&' until end of string
+		// name=example&lname=coucou
 		next = line.find("&");
 		m_rm.small_datas.push_back(line.substr(0, next));
 		line = line.substr(next + 1, line.size());
@@ -230,6 +272,7 @@ void	Request::parsePost(std::string& line)
 /*                              BOUNDARY                               */
 /***********************************************************************/
 
+// boundary + dispatch
 void	Request::parseBoundary(std::string& line)
 {
 	std::stringstream	ss(line);
@@ -242,14 +285,18 @@ void	Request::parseBoundary(std::string& line)
 		ctx = CONTENT;
 }
 
+// get Content Disposition
 void	Request::parseContentDisposition(std::stringstream& ss)
 {
+
 	struct RequestMembers::post_file	data;
 	std::string							word;
 	size_t								equal;
 
 	ss >> word;
 	ss >> word;
+
+	std::cout << word << std::endl;
 	
 	int i = 0;
 	while(word[i] != '\0'){
@@ -259,6 +306,8 @@ void	Request::parseContentDisposition(std::stringstream& ss)
 
 	if (word[i] == ';')
 		word.erase(i);
+
+
 	equal = word.find("=");
 	data.envname = word.substr(equal + 1);
 	if (ss >> word)
@@ -281,6 +330,7 @@ void	Request::parseContentDisposition(std::stringstream& ss)
 /*                                FILE                                 */
 /***********************************************************************/
 
+// file
 void	Request::parseFile(void)
 {
 	if (m_rm.post_file.filename == "" || is_all_received() == false)
